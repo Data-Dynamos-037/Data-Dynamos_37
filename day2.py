@@ -1,8 +1,10 @@
 import pandas as pd
+import streamlit as st
 df = pd.read_csv("pollution_us_2000_2016.csv")
 
 
 # Outliers removal
+st.title("Remove outliers")
 
 outlier_columns = [
     'NO2 AQI', 'NO2 Mean', 'O3 AQI', 'O3 Mean',
@@ -10,6 +12,7 @@ outlier_columns = [
     'NO2 1st Max Value', 'O3 1st Max Value', 
     'SO2 1st Max Value', 'CO 1st Max Value'
 ]
+st.write(outlier_columns)
 
 # Function to detect outliers using IQR method
 def detect_outliers_iqr(df, column):
@@ -26,6 +29,7 @@ def handle_outliers_with_median(df, column):
     outliers = detect_outliers_iqr(df, column)
     median_value = df[column].median()  # Calculate median of the column
     df.loc[outliers.index, column] = median_value  # Replace outliers with median
+    st.text("Handled outliers for column" + column + "with total rows" + str(len(outliers)))
     return df
 
 detect_outliers_iqr(df, outlier_columns[0])[outlier_columns[0]]
@@ -42,3 +46,4 @@ for col in outlier_columns:
 # check if outlier values are modified
 df[outlier_columns[0]][10:15]
 
+st.dataframe(df.head())
