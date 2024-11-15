@@ -129,21 +129,32 @@ fig = px.choropleth(state_data,
                     template="plotly_dark")
 st.plotly_chart(fig)
 
+# Plot most populated states
+st.markdown(f"<h3 style='color: #FF6347;'>Top Pollutant Level states</h3>", unsafe_allow_html=True)
+topstatesdata = data[["State", 'NO2 AQI', 'O3 AQI', 'SO2 AQI', 'CO AQI']].groupby("State").median()
+toptenstatesdata = topstatesdata.sort_values(by=['NO2 AQI', 'O3 AQI', 'SO2 AQI', 'CO AQI'], ascending=False)[:10]
+fig, ax = plt.subplots()
+toptenstatesdata.plot(kind="bar", ax=ax)
+st.pyplot(fig)
+
 # Filter data for the selected city
 city_data = state_data[state_data['City'] == city]
+
+# Groupby data using date local
+city_data = city_data[['Date Local', 'NO2 AQI', 'O3 AQI', 'SO2 AQI', 'CO AQI', 'NO2 1st Max Value', 'O3 1st Max Value', 'SO2 1st Max Value', 'CO 1st Max Value']].groupby("Date Local").median()
 
 # AQI and Peak Values bar chart for selected city
 st.subheader(f"AQI Levels and Peak Values for {city}")
 fig, axs = plt.subplots(1, 2, figsize=(15, 5))
 
-# AQI Bar Chart
-city_data[['Date Local', 'NO2 AQI', 'O3 AQI', 'SO2 AQI', 'CO AQI']].plot(kind="bar", ax=axs[0])
+# AQI Line Chart
+city_data[['NO2 AQI', 'O3 AQI', 'SO2 AQI', 'CO AQI']].plot(kind="line", ax=axs[0])
 axs[0].set_title("AQI Levels by Pollutant")
 axs[0].set_xlabel("Date")
 axs[0].set_ylabel("AQI Level")
 
-# Max Value Bar Chart
-city_data[['Date Local', 'NO2 1st Max Value', 'O3 1st Max Value', 'SO2 1st Max Value', 'CO 1st Max Value']].plot(kind="bar", ax=axs[1])
+# Max Value Line Chart
+city_data[['NO2 1st Max Value', 'O3 1st Max Value', 'SO2 1st Max Value', 'CO 1st Max Value']].plot(kind="line", ax=axs[1])
 axs[1].set_title("Peak Pollutant Levels")
 axs[1].set_xlabel("Date")
 axs[1].set_ylabel("Pollutant Level")
