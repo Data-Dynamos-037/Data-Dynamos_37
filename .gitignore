@@ -1,0 +1,3 @@
+# .gitignore
+datadynamos_env/
+.venv/

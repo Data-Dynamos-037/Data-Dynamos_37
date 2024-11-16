@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import plotly.express as px
 
 
 # Title with custom color
@@ -119,15 +118,15 @@ else:
     st.sidebar.warning("No data available for the selected state. Please choose another state.")
 
 # Choropleth map by county for the selected state
-st.markdown(f"<h3 style='color: #FF6347;'>Pollutant Levels in {state}</h3>", unsafe_allow_html=True)
-fig = px.choropleth(state_data,
-                    locations="County",
-                    locationmode="USA-states",
-                    color=pollutant,
-                    scope="usa",
-                    title=f"<span style='color: #FFD700;'>{pollutant} Levels by County in {state}</span>",
-                    template="plotly_dark")
-st.plotly_chart(fig)
+# st.markdown(f"<h3 style='color: #FF6347;'>Pollutant Levels in {state}</h3>", unsafe_allow_html=True)
+# fig = px.choropleth(state_data,
+#                     locations="County",
+#                     locationmode="USA-states",
+#                     color=pollutant,
+#                     scope="usa",
+#                     title=f"<span style='color: #FFD700;'>{pollutant} Levels by County in {state}</span>",
+#                     template="plotly_dark")
+# st.plotly_chart(fig)
 
 # Plot most populated states
 st.markdown(f"<h3 style='color: #FF6347;'>Top Pollutant Level states</h3>", unsafe_allow_html=True)
