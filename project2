@@ -3,50 +3,31 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import seaborn as sns
-import plotly.express as px  
 
-# st.markdown("<h1 style='text-align: center;'><img src='image.png' width='150'></h1>", unsafe_allow_html=True)
-st.image('image.png')
+
 # Title with custom color
 st.markdown("<h1 style='color: #1E90FF;'>Air Quality Analysis Dashboard</h1>", unsafe_allow_html=True)
 st.markdown("<h3 style='color: #32CD32;'>Explore air quality data by pollutants, regions, and time periods.</h3>", unsafe_allow_html=True)
 
 data = pd.read_csv("pollution_us_2000_2016.csv")
 
-# Dataset Overview with colored headline
-st.markdown("<h3 style='color: #FFD700;'>Dataset Overview</h3>", unsafe_allow_html=True)
-st.write(data.head().style.set_table_styles([
-    {'selector': 'thead th', 'props': [('background-color', '#1E90FF'), ('color', 'white'), ('font-size', '14px')]},
-    {'selector': 'tbody td', 'props': [('background-color', '#F0F8FF'), ('color', 'black'), ('font-size', '12px')]}
-]))
-# Drop irrelevant columns
+# Convert 'Date Local' to datetime
+data['Date Local'] = pd.to_datetime(data['Date Local'], errors='coerce')
+
+# Drop irrelevant column
 if 'Unnamed: 0' in data.columns:
     data = data.drop(columns=['Unnamed: 0'])
-    st.write("Dropped 'Unnamed: 0' column as it was irrelevant.")
-
 
 missing_values = data.isnull().sum()
-st.write("Missing values count per column:")
-st.write(missing_values)
+print("Missing values:\n", missing_values)
 
 data['SO2 AQI'] = data.groupby('City')['SO2 AQI'].transform(lambda x: x.fillna(x.median()))
 data['CO AQI'] = data.groupby('City')['CO AQI'].transform(lambda x: x.fillna(x.median()))
-st.write("Imputing missing values in 'SO2 AQI' and 'CO AQI' with groupby city median values.")
 
-missing_values = data.isnull().sum()
-st.write("Missing values count per column:")
-st.write(missing_values)
+data['Date Local'] = pd.to_datetime(data['Date Local'], format='%Y-%m-%d')
 
-data['Date Local'] = pd.to_datetime(data['Date Local'], errors='coerce')
-data = data.dropna(subset=['Date Local'])
+outliers_columns = data[['NO2 AQI', 'O3 AQI', 'SO2 AQI','CO AQI']]
 
-
-
-# Assuming 'data' is your DataFrame
-outliers_columns = data[['NO2 AQI', 'O3 AQI', 'SO2 AQI', 'CO AQI']]
-
-# Function to detect outliers using IQR method
 def detect_outliers_iqr(data, column):
     Q1 = data[column].quantile(0.25)  # First quartile (25%)
     Q3 = data[column].quantile(0.75)  # Third quartile (75%)
@@ -58,12 +39,18 @@ def detect_outliers_iqr(data, column):
 
     # Find outliers
     outliers = data[(data[column] < lower_bound) | (data[column] > upper_bound)]
-    
-    # Create a DataFrame without outliers
-    df_no_outliers = data[(data[column] >= lower_bound) & (data[column] <= upper_bound)]
-    return outliers, df_no_outliers
+    print(f"Outliers in {column}:\n", outliers[column])
 
-# Function to replace outliers with median
+    # Optionally, return a DataFrame without outliers
+    df_no_outliers = data[(data[column] >= lower_bound) & (data[column] <= upper_bound)]
+    return df_no_outliers
+
+# Apply the function to pollutant columns
+outliers_NO2_AQI = detect_outliers_iqr(outliers_columns, 'NO2 AQI')
+outliers_O3_AQI = detect_outliers_iqr(outliers_columns, 'O3 AQI')
+outliers_SO2_AQI = detect_outliers_iqr(outliers_columns, 'SO2 AQI')
+outliers_CO_AQI = detect_outliers_iqr(outliers_columns, 'CO AQI')
+
 def replace_outliers_with_median(data, column):
     Q1 = data[column].quantile(0.25)
     Q3 = data[column].quantile(0.75)
@@ -73,53 +60,24 @@ def replace_outliers_with_median(data, column):
     upper_bound = Q3 + 1.5 * IQR
 
     median_value = data[column].median()
-    data[column] = data[column].apply(lambda x: median_value if (x < lower_bound or x > upper_bound) else x)
+    data.loc[:, column] = data[column].apply(lambda x: median_value if (x < lower_bound or x > upper_bound) else x)
 
-# Sample dataset (replace with your actual dataset)
-# data = pd.read_csv('your_dataset.csv')
 
-# Assume you have a dataframe called outliers_columns with these columns
-outliers_columns = data[['NO2 AQI', 'O3 AQI', 'SO2 AQI', 'CO AQI']]
-
-# Detect outliers before replacement for each column and store them separately
-outliers_NO2_AQI, data_NO2_AQI = detect_outliers_iqr(outliers_columns, 'NO2 AQI')
-outliers_O3_AQI, data_O3_AQI = detect_outliers_iqr(outliers_columns, 'O3 AQI')
-outliers_SO2_AQI, data_SO2_AQI = detect_outliers_iqr(outliers_columns, 'SO2 AQI')
-outliers_CO_AQI, data_CO_AQI = detect_outliers_iqr(outliers_columns, 'CO AQI')
-
-# Combine all outliers in one table before replacement
-outliers_combined_before = pd.concat([outliers_NO2_AQI[['NO2 AQI']],
-                                      outliers_O3_AQI[['O3 AQI']],
-                                      outliers_SO2_AQI[['SO2 AQI']],
-                                      outliers_CO_AQI[['CO AQI']]], axis=1)
-
-# Replace outliers with median for each column
+# Apply replacement to pollutant columns
 replace_outliers_with_median(outliers_columns, 'NO2 AQI')
 replace_outliers_with_median(outliers_columns, 'O3 AQI')
 replace_outliers_with_median(outliers_columns, 'SO2 AQI')
 replace_outliers_with_median(outliers_columns, 'CO AQI')
 
-# Combine all data after replacement into one table
-data_combined_after = pd.concat([outliers_columns[['NO2 AQI']],
-                                 outliers_columns[['O3 AQI']],
-                                 outliers_columns[['SO2 AQI']],
-                                 outliers_columns[['CO AQI']]], axis=1)
+# Dataset Overview with colored headline
+st.markdown("<h3 style='color: #FFD700;'>Dataset Overview</h3>", unsafe_allow_html=True)
+st.write(data.head().style.set_table_styles([
+    {'selector': 'thead th', 'props': [('background-color', '#1E90FF'), ('color', 'white'), ('font-size', '14px')]},
+    {'selector': 'tbody td', 'props': [('background-color', '#F0F8FF'), ('color', 'black'), ('font-size', '12px')]}
+]))
 
-# Display Outliers Before Replacement in Streamlit
-st.markdown("<h3 style='color: #FFD700;'>Outliers</h3>", unsafe_allow_html=True)
-st.dataframe(outliers_combined_before)
-
-# Display Outliers After Replacement in Streamlit
-st.markdown("<h3 style='color: #FFD700;'>Outliers after replacement</h3>", unsafe_allow_html=True)
-st.dataframe(data_combined_after)
-
-
-
-data_without_date = data.drop(columns=['Date Local'])
-
-# Show summary statistics for all columns except 'Date Local'
-st.markdown("<h3 style='color: #FFD700;'>Summary Statistics</h3>", unsafe_allow_html=True)
-st.write(data_without_date.describe())
+# Sidebar filters with custom colors
+st.sidebar.markdown("<h4 style='color: #FFD700;'>Filters</h4>", unsafe_allow_html=True)
 
 # Pollutant selection
 st.sidebar.markdown("<h4 style='color: #1E90FF;'>Choose a Pollutant</h4>", unsafe_allow_html=True)
@@ -210,29 +168,3 @@ fig, ax = plt.subplots(figsize=(8, 6))
 sns.heatmap(correlation_data, annot=True, cmap='coolwarm', ax=ax, linewidths=0.5)
 ax.set_title("Correlation Heatmap", fontsize=16)
 st.pyplot(fig)
-
-st.markdown("<h3 style='color: #1E90FF;'>Seasonal Trends of Pollutants</h3>", unsafe_allow_html=True)
-data['Month'] = data['Date Local'].dt.month
-seasonal_data = data.groupby('Month')[['NO2 AQI', 'O3 AQI', 'SO2 AQI', 'CO AQI']].mean()
-fig, ax = plt.subplots(figsize=(10, 6))
-seasonal_data.plot(ax=ax, colormap='coolwarm', marker='o')
-ax.set_title("Average Pollutant Levels by Month", fontsize=16)
-ax.set_xlabel("Month")
-ax.set_ylabel("Pollutant AQI")
-st.pyplot(fig)
-
-data.columns = data.columns.str.strip()  # Strip leading/trailing spaces from column names
-
-st.markdown("<h3 style='color: #1E90FF;'>NO2 AQI Levels Across U.S. States</h3>", unsafe_allow_html=True)
-fig = px.choropleth(
-    data_frame=data,
-    locations='State',               # State namess      # Match to state names
-    color='NO2 AQI',                 # Data column for AQI levels
-    hover_name='State',              # Tooltip with state name
-    color_continuous_scale='Viridis',
-    scope="usa",                     # Restrict to U.S. scope
-    title="NO2 AQI Levels Across U.S. States"
-)
-
-# Display the map in Streamlit
-st.plotly_chart(fig)
