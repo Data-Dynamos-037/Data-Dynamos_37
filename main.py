@@ -58,7 +58,8 @@ def replace_outliers_with_median(data, column):
     upper_bound = Q3 + 1.5 * IQR
 
     median_value = data[column].median()
-    data[column] = data[column].apply(lambda x: median_value if (x < lower_bound or x > upper_bound) else x)
+    data.loc[:, column] = data[column].apply(lambda x: median_value if (x < lower_bound or x > upper_bound) else x)
+
 
 # Apply replacement to pollutant columns
 replace_outliers_with_median(outliers_columns, 'NO2 AQI')
@@ -91,7 +92,7 @@ data_filtered = data[(data['Date Local'] >= pd.to_datetime(start_date)) & (data[
 # Temporal Trend Visualization
 if pollutant in data_filtered.columns:
     st.markdown(f"<h3 style='color: #FFD700;'>Temporal Trend of {pollutant}</h3>", unsafe_allow_html=True)
-    data_grouped = data_filtered.groupby("Date Local")[pollutant].mean().resample('M').mean()
+    data_grouped = data_filtered.groupby("Date Local")[pollutant].mean().resample('ME').mean()
     fig, ax = plt.subplots(figsize=(10, 6))
     data_grouped.plot(ax=ax, color='tab:blue', lw=2)
     ax.set_title(f"{pollutant} Levels Over Time", fontsize=16, color='darkorange')
