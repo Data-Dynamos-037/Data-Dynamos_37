@@ -228,21 +228,107 @@ ax.set_ylabel("Pollutant AQI")
 st.pyplot(fig)
 
 
+st.markdown("<h3 style='color: #FF6347;'>Pollutant Levels for each state</h3>", unsafe_allow_html=True)
+pollutant_options = ['NO2 AQI', 'O3 AQI', 'SO2 AQI', 'CO AQI']
 
-st.markdown("<h3 style='color: #1E90FF;'>Interactive AQI Choropleth Map</h3>", unsafe_allow_html=True)
+# Add a selectbox with a unique key
+pollutant_map = st.selectbox("Select a pollutant to visualize:", pollutant_options, key="pollutant_map_selectbox")
 
+state_pollutant_pivot = data.pivot_table(
+    index="State",
+    values=pollutant_map,
+    aggfunc="mean"
+).sort_values(by=pollutant_map, ascending=False)
 
-
-pollutant_map = st.selectbox("Select Pollutant for Map", ['NO2 AQI', 'O3 AQI', 'SO2 AQI', 'CO AQI'])
-
-fig_map = px.choropleth(
-    data_frame=data,
-    locations='State',
-    locationmode='USA-states',
-    color=pollutant_map,
-    hover_name='State',
-    color_continuous_scale='Plasma',
-    scope="usa",
-    title=f"{pollutant_map} Levels Across U.S. States"
+fig, ax = plt.subplots(figsize=(10, 6))
+sns.heatmap(
+    state_pollutant_pivot,
+    cmap="YlGnBu",
+    annot=True,
+    fmt=".1f",
+    ax=ax
 )
-st.plotly_chart(fig_map)
+plt.title(f"Heatmap of {pollutant_map} Levels Across States")
+st.pyplot(fig)
+st.markdown("<h3 style='color: #FF6347;'>Heat Map for Pollutant levels</h3>", unsafe_allow_html=True)
+state_pollutant_avg = data.groupby('State')[pollutant_map].mean().reset_index()
+
+top_states = state_pollutant_avg.nlargest(10, pollutant_map)
+
+fig_top_states = px.bar(
+    top_states,
+    x=pollutant_map,
+    y='State',
+    orientation='h',
+    title=f"Top 10 States with Highest {pollutant_map} Levels",
+    labels={pollutant_map: f'{pollutant_map} Level'},
+    color=pollutant_map,
+    color_continuous_scale='Inferno'
+)
+st.plotly_chart(fig_top_states)
+
+
+
+# Create a bar chart
+fig_bar = px.bar(
+    state_pollutant_avg,
+    x='State',
+    y=pollutant_map,
+    title=f"Average {pollutant_map} Levels by State",
+    labels={'State': 'State', pollutant_map: f'{pollutant_map} Level'},
+    color=pollutant_map,
+    color_continuous_scale='Viridis'
+)
+st.plotly_chart(fig_bar)
+
+st.markdown("<h3 style='color: #FF6347;'>Line Chart for Pollutant Trends by State</h3>", unsafe_allow_html=True)
+# Filter for specific states (optional)
+selected_states = st.multiselect("Select states to visualize:", data['State'].unique())
+
+if selected_states:
+    filtered_data = data[data['State'].isin(selected_states)]
+
+    fig_line = px.line(
+        filtered_data,
+        x="Date Local",
+        y=pollutant_map,
+        color="State",
+        title=f"Trends of {pollutant_map} Levels in Selected States",
+        labels={"Date Local": "Date", pollutant_map: f"{pollutant_map} Level"}
+    )
+    st.plotly_chart(fig_line)
+else:
+    st.warning("Please select at least one state to visualize trends.")
+
+# Footer section
+st.markdown("---")  # Add a horizontal line to separate the footer
+st.markdown(
+    """
+    <style>
+        .footer {
+            position: relative;
+            bottom: 0;
+            width: 100%;
+            background-color: #f8f9fa;
+            padding: 10px 0;
+            color: #6c757d;
+            text-align: center;
+            font-size: 14px;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer h4 {
+            margin: 0;
+            font-size: 16px;
+            color: #343a40;
+        }
+        .footer p {
+            margin: 5px 0 0;
+        }
+    </style>
+    <div class="footer">
+        <h4>Team Members</h4>
+        <p>Ashish (Team Lead) | Priyanka | Gangavaram | Waswi</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
