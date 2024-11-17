@@ -7,7 +7,7 @@ import seaborn as sns
 import plotly.express as px  
 
 # st.markdown("<h1 style='text-align: center;'><img src='image.png' width='150'></h1>", unsafe_allow_html=True)
-st.image('image.png',width = 100)
+st.image('image.png',width = 200)
 # Title with custom color
 st.markdown("<h1 style='color: #1E90FF;'>Air Quality Analysis Dashboard</h1>", unsafe_allow_html=True)
 st.markdown("<h3 style='color: #32CD32;'>Explore Air Quality Data by Pollutants, Regions, and Time Periods.</h3>", unsafe_allow_html=True)
