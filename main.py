@@ -7,12 +7,18 @@ import seaborn as sns
 import plotly.express as px  
 
 # st.markdown("<h1 style='text-align: center;'><img src='image.png' width='150'></h1>", unsafe_allow_html=True)
-st.image('image.png')
+st.image('image.png',width = 100)
 # Title with custom color
 st.markdown("<h1 style='color: #1E90FF;'>Air Quality Analysis Dashboard</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='color: #32CD32;'>Explore air quality data by pollutants, regions, and time periods.</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='color: #32CD32;'>Explore Air Quality Data by Pollutants, Regions, and Time Periods.</h3>", unsafe_allow_html=True)
+@st.cache
+def load_data():
+    # Load and preprocess your dataset here
+    data = pd.read_csv("pollution_us_2000_2016.csv")
+    return data
+data = load_data()
 
-data = pd.read_csv("pollution_us_2000_2016.csv")
+
 
 # Dataset Overview with colored headline
 st.markdown("<h3 style='color: #FFD700;'>Dataset Overview</h3>", unsafe_allow_html=True)
@@ -221,18 +227,22 @@ ax.set_xlabel("Month")
 ax.set_ylabel("Pollutant AQI")
 st.pyplot(fig)
 
-data.columns = data.columns.str.strip()  # Strip leading/trailing spaces from column names
 
-st.markdown("<h3 style='color: #1E90FF;'>NO2 AQI Levels Across U.S. States</h3>", unsafe_allow_html=True)
-fig = px.choropleth(
+
+st.markdown("<h3 style='color: #1E90FF;'>Interactive AQI Choropleth Map</h3>", unsafe_allow_html=True)
+
+
+
+pollutant_map = st.selectbox("Select Pollutant for Map", ['NO2 AQI', 'O3 AQI', 'SO2 AQI', 'CO AQI'])
+
+fig_map = px.choropleth(
     data_frame=data,
-    locations='State',               # State namess      # Match to state names
-    color='NO2 AQI',                 # Data column for AQI levels
-    hover_name='State',              # Tooltip with state name
-    color_continuous_scale='Viridis',
-    scope="usa",                     # Restrict to U.S. scope
-    title="NO2 AQI Levels Across U.S. States"
+    locations='State',
+    locationmode='USA-states',
+    color=pollutant_map,
+    hover_name='State',
+    color_continuous_scale='Plasma',
+    scope="usa",
+    title=f"{pollutant_map} Levels Across U.S. States"
 )
-
-# Display the map in Streamlit
-st.plotly_chart(fig)
+st.plotly_chart(fig_map)
