@@ -6,7 +6,7 @@ matplotlib.use('Agg')  # Use non-interactive backend for matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
-
+ 
 # Display an image in the dashboard
 st.image('image.png', width=200)
 
