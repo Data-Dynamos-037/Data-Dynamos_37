@@ -14,7 +14,7 @@ st.markdown("<h3 style='color: #32CD32;'>Explore Air Quality Data by Pollutants,
 @st.cache
 def load_data():
     # Load and preprocess your dataset here
-    data = pd.read_csv("pollution_us_2000_2016.csv")
+    data = pd.read_csv("sampled_dataset.csv")
     return data
 data = load_data()
 
