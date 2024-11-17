@@ -210,6 +210,8 @@ axs[1].set_xlabel("Date")
 axs[1].set_ylabel("Pollutant Level")
 st.pyplot(fig)
 
+#Pollution Correlations
+
 st.markdown("<h3 style='color: #FF6347;'>Pollutant Correlations</h3>", unsafe_allow_html=True)
 correlation_data = data[['NO2 AQI', 'O3 AQI', 'SO2 AQI', 'CO AQI']].corr()
 fig, ax = plt.subplots(figsize=(8, 6))
@@ -217,6 +219,7 @@ sns.heatmap(correlation_data, annot=True, cmap='coolwarm', ax=ax, linewidths=0.5
 ax.set_title("Correlation Heatmap", fontsize=16)
 st.pyplot(fig)
 
+#Seasonal Trends of pollutants by month
 st.markdown("<h3 style='color: #1E90FF;'>Seasonal Trends of Pollutants</h3>", unsafe_allow_html=True)
 data['Month'] = data['Date Local'].dt.month
 seasonal_data = data.groupby('Month')[['NO2 AQI', 'O3 AQI', 'SO2 AQI', 'CO AQI']].mean()
@@ -227,7 +230,7 @@ ax.set_xlabel("Month")
 ax.set_ylabel("Pollutant AQI")
 st.pyplot(fig)
 
-
+# Pollutant levels for selected state
 st.markdown("<h3 style='color: #FF6347;'>Pollutant Levels for each state</h3>", unsafe_allow_html=True)
 pollutant_options = ['NO2 AQI', 'O3 AQI', 'SO2 AQI', 'CO AQI']
 
@@ -250,6 +253,8 @@ sns.heatmap(
 )
 plt.title(f"Heatmap of {pollutant_map} Levels Across States")
 st.pyplot(fig)
+
+#Heat Map of selected pollutant levels
 st.markdown("<h3 style='color: #FF6347;'>Heat Map for Pollutant levels</h3>", unsafe_allow_html=True)
 state_pollutant_avg = data.groupby('State')[pollutant_map].mean().reset_index()
 
@@ -269,7 +274,7 @@ st.plotly_chart(fig_top_states)
 
 
 
-# Create a bar chart
+# Create a bar chart for average levels by state
 fig_bar = px.bar(
     state_pollutant_avg,
     x='State',
@@ -281,6 +286,7 @@ fig_bar = px.bar(
 )
 st.plotly_chart(fig_bar)
 
+#Line chart for selected pollutant trends by state
 st.markdown("<h3 style='color: #FF6347;'>Line Chart for Pollutant Trends by State</h3>", unsafe_allow_html=True)
 # Filter for specific states (optional)
 selected_states = st.multiselect("Select states to visualize:", data['State'].unique())
