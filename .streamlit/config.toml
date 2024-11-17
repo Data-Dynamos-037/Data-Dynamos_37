@@ -1,0 +1,10 @@
+[server]
+headless = true
+port = $PORT
+enableCORS = false
+enableWebsocketCompression = false
+
+[theme]
+base = "dark"
+primaryColor = "green"
+
