@@ -20,12 +20,7 @@ data = load_data()
 
 
 
-# Dataset Overview with colored headline
-st.markdown("<h3 style='color: #FFD700;'>Dataset Overview</h3>", unsafe_allow_html=True)
-st.write(data.head().style.set_table_styles([
-    {'selector': 'thead th', 'props': [('background-color', '#1E90FF'), ('color', 'white'), ('font-size', '14px')]},
-    {'selector': 'tbody td', 'props': [('background-color', '#F0F8FF'), ('color', 'black'), ('font-size', '12px')]}
-]))
+
 # Drop irrelevant columns
 if 'Unnamed: 0' in data.columns:
     data = data.drop(columns=['Unnamed: 0'])
