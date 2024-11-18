@@ -29,20 +29,14 @@ st.write(data.head().style.set_table_styles([
 # Drop irrelevant columns
 if 'Unnamed: 0' in data.columns:
     data = data.drop(columns=['Unnamed: 0'])
-    st.write("Dropped 'Unnamed: 0' column as it was irrelevant.")
-
 
 missing_values = data.isnull().sum()
-st.write("Missing values count per column:")
-st.write(missing_values)
 
 data['SO2 AQI'] = data.groupby('City')['SO2 AQI'].transform(lambda x: x.fillna(x.median()))
 data['CO AQI'] = data.groupby('City')['CO AQI'].transform(lambda x: x.fillna(x.median()))
-st.write("Imputing missing values in 'SO2 AQI' and 'CO AQI' with groupby city median values.")
+
 
 missing_values = data.isnull().sum()
-st.write("Missing values count per column:")
-st.write(missing_values)
 
 data['Date Local'] = pd.to_datetime(data['Date Local'], errors='coerce')
 data = data.dropna(subset=['Date Local'])
@@ -112,20 +106,13 @@ data_combined_after = pd.concat([outliers_columns[['NO2 AQI']],
                                  outliers_columns[['CO AQI']]], axis=1)
 
 # Display Outliers Before Replacement in Streamlit
-st.markdown("<h3 style='color: #FFD700;'>Outliers</h3>", unsafe_allow_html=True)
-st.dataframe(outliers_combined_before)
+
 
 # Display Outliers After Replacement in Streamlit
-st.markdown("<h3 style='color: #FFD700;'>Outliers after replacement</h3>", unsafe_allow_html=True)
-st.dataframe(data_combined_after)
-
-
 
 data_without_date = data.drop(columns=['Date Local'])
 
 # Show summary statistics for all columns except 'Date Local'
-st.markdown("<h3 style='color: #FFD700;'>Summary Statistics</h3>", unsafe_allow_html=True)
-st.write(data_without_date.describe())
 
 # Pollutant selection
 st.sidebar.markdown("<h4 style='color: #1E90FF;'>Choose a Pollutant</h4>", unsafe_allow_html=True)
