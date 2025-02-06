@@ -4,7 +4,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
-import plotly.express as px  
+import plotly.express as px 
 
 # st.markdown("<h1 style='text-align: center;'><img src='image.png' width='150'></h1>", unsafe_allow_html=True)
 st.image('image.png',width = 200)
@@ -17,8 +17,6 @@ def load_data():
     data = pd.read_csv("sampled_dataset.csv")
     return data
 data = load_data()
-
-
 
 
 # Drop irrelevant columns
@@ -135,6 +133,7 @@ if pollutant in data_filtered.columns:
     ax.set_xticklabels(data_grouped.index.strftime('%Y-%m-%d')[::max(len(data_grouped) // 6, 1)], rotation=45)
     st.pyplot(fig)
 
+
 # State filter
 st.sidebar.markdown("<h4 style='color: #1E90FF;'>Select State</h4>", unsafe_allow_html=True)
 state = st.sidebar.selectbox("Select State", data_filtered['State'].unique())
@@ -177,7 +176,7 @@ city_data = city_data[['Date Local', 'NO2 AQI', 'O3 AQI', 'SO2 AQI', 'CO AQI', '
 
 # AQI and Peak Values bar chart for selected city
 st.subheader(f"AQI Levels and Peak Values for {city}")
-fig, axs = plt.subplots(1, 2, figsize=(15, 5))
+fig, axs = plt.subplots(1, 2, figsize=(15,5))
 
 # AQI Line Chart
 city_data[['NO2 AQI', 'O3 AQI', 'SO2 AQI', 'CO AQI']].plot(kind="line", ax=axs[0])
@@ -268,25 +267,60 @@ fig_bar = px.bar(
 )
 st.plotly_chart(fig_bar)
 
-#Line chart for selected pollutant trends by state
+import pandas as pd
+import plotly.express as px
+import streamlit as st
+
+# Sample data setup (replace with your data)
+# data = pd.read_csv('your_data.csv')  # Replace with actual data
+
 st.markdown("<h3 style='color: #FF6347;'>Line Chart for Pollutant Trends by State</h3>", unsafe_allow_html=True)
+
 # Filter for specific states (optional)
 selected_states = st.multiselect("Select states to visualize:", data['State'].unique())
 
 if selected_states:
-    filtered_data = data[data['State'].isin(selected_states)]
+    # Limit the number of selected states to avoid clutter
+    if len(selected_states) > 5:
+        st.warning("Please select up to 5 states for better visualization.")
+    else:
+        filtered_data = data[data['State'].isin(selected_states)].copy()
+        
+        # Resample data to monthly averages for smoother visualization
+        filtered_data['Date Local'] = pd.to_datetime(filtered_data['Date Local'])
+        filtered_data.set_index('Date Local', inplace=True)
+        resampled_data = (
+            filtered_data.groupby(['State', pd.Grouper(freq='M')])  # Group by month
+            .agg({pollutant_map: 'mean'})  # Use mean of pollutant levels per month
+            .reset_index()
+        )
 
-    fig_line = px.line(
-        filtered_data,
-        x="Date Local",
-        y=pollutant_map,
-        color="State",
-        title=f"Trends of {pollutant_map} Levels in Selected States",
-        labels={"Date Local": "Date", pollutant_map: f"{pollutant_map} Level"}
-    )
-    st.plotly_chart(fig_line)
+        # Apply a rolling average to smooth the trend lines (optional)
+        window_size = 7  # Define window size for rolling average
+        resampled_data[f'{pollutant_map}_Rolling'] = resampled_data.groupby('State')[pollutant_map].transform(lambda x: x.rolling(window=window_size).mean())
+
+        # Plot line chart using smoothed data
+        fig_line = px.line(
+            resampled_data,
+            x="Date Local",
+            y=f'{pollutant_map}_Rolling',  # Use the rolling average
+            color="State",
+            title=f"Trends of {pollutant_map} Levels in Selected States (Smoothed)",
+            labels={"Date Local": "Date", f'{pollutant_map}_Rolling': f"{pollutant_map} Level"},
+            line_shape="spline"  # Smooth the lines with a spline
+        )
+
+        fig_line.update_layout(
+            xaxis_title="Date",
+            yaxis_title=f"{pollutant_map} Level",
+            legend_title="State",
+            template="plotly_white",
+            showlegend=True,
+        )
+        st.plotly_chart(fig_line)
 else:
     st.warning("Please select at least one state to visualize trends.")
+
 
 # Footer section
 st.markdown("---")  # Add a horizontal line to separate the footer
